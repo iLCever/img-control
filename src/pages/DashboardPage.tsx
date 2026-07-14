@@ -8,13 +8,14 @@ import type { ImageItem, StatsData, UploadTask } from "../types";
 import { formatBytes } from "../utils/format";
 
 interface DashboardPageProps {
-  onLoggedOut: () => void;
+  isAdmin: boolean;
+  onLoggedOut?: () => void;
 }
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
 const MAX_SIZE = 5 * 1024 * 1024;
 
-export function DashboardPage({ onLoggedOut }: DashboardPageProps) {
+export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [stats, setStats] = useState<StatsData>({ count: 0, totalSize: 0 });
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -34,8 +35,8 @@ export function DashboardPage({ onLoggedOut }: DashboardPageProps) {
   const uploading = tasks.some((task) => task.status === "uploading" || task.status === "waiting");
 
   const handleAuthError = useCallback((error: unknown) => {
-    if (error instanceof ApiRequestError && error.status === 401) onLoggedOut();
-  }, [onLoggedOut]);
+    if (isAdmin && error instanceof ApiRequestError && error.status === 401) onLoggedOut?.();
+  }, [isAdmin, onLoggedOut]);
 
   const loadStats = useCallback(async () => {
     try { setStats(await api.stats()); } catch (error) { handleAuthError(error); }
@@ -113,6 +114,7 @@ export function DashboardPage({ onLoggedOut }: DashboardPageProps) {
   }, [handleAuthError, loadImages, loadStats]);
 
   useEffect(() => {
+    if (!isAdmin) return;
     const paste = (event: ClipboardEvent) => {
       const files = Array.from(event.clipboardData?.items ?? [])
         .filter((item) => item.kind === "file")
@@ -122,7 +124,7 @@ export function DashboardPage({ onLoggedOut }: DashboardPageProps) {
     };
     window.addEventListener("paste", paste);
     return () => window.removeEventListener("paste", paste);
-  }, [addFiles]);
+  }, [addFiles, isAdmin]);
 
   async function copy(text: string, label: string) {
     try {
@@ -147,7 +149,7 @@ export function DashboardPage({ onLoggedOut }: DashboardPageProps) {
   }
 
   async function logout() {
-    try { await api.logout(); } finally { onLoggedOut(); }
+    try { await api.logout(); } finally { onLoggedOut?.(); }
   }
 
   const allVisibleSelected = useMemo(() => images.length > 0 && images.every((image) => selected.has(image.key)), [images, selected]);
@@ -155,29 +157,41 @@ export function DashboardPage({ onLoggedOut }: DashboardPageProps) {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark small">墨</span><div><strong>墨小图床</strong><span>私人图片管理</span></div></div>
+        <div className="brand"><span className="brand-mark small">墨</span><div><strong>墨小图床</strong><span>{isAdmin ? "私人图片管理" : "公开图片库"}</span></div></div>
         <div className="header-actions">
           <div className="stat-pill"><strong>{stats.count}</strong><span>张图片</span></div>
           <div className="stat-pill"><strong>{formatBytes(stats.totalSize)}</strong><span>已使用</span></div>
-          <button className="button primary header-upload" type="button" disabled={uploading} onClick={() => headerInputRef.current?.click()}>上传</button>
-          <input
-            ref={headerInputRef}
-            className="visually-hidden"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-            multiple
-            onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }}
-          />
+          {isAdmin && (
+            <>
+              <button className="button primary header-upload" type="button" disabled={uploading} onClick={() => headerInputRef.current?.click()}>上传</button>
+              <input
+                ref={headerInputRef}
+                className="visually-hidden"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                multiple
+                onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }}
+              />
+            </>
+          )}
           <button className="icon-button" type="button" onClick={() => setTheme(theme === "light" ? "dark" : "light")} title="切换主题">
             {theme === "light" ? "☾" : "☀"}
           </button>
-          <button className="button quiet" type="button" onClick={() => { void logout(); }}>退出</button>
+          {isAdmin ? (
+            <button className="button quiet" type="button" onClick={() => { void logout(); }}>退出</button>
+          ) : (
+            <a className="button quiet" href="https://img-admin.moxiao.ggff.net/login">登录</a>
+          )}
         </div>
       </header>
 
       <main className="dashboard">
-        <UploadZone disabled={uploading} onFiles={addFiles} />
-        <UploadQueue tasks={tasks} onClear={() => setTasks((current) => current.filter((task) => task.status === "waiting" || task.status === "uploading"))} />
+        {isAdmin && (
+          <>
+            <UploadZone disabled={uploading} onFiles={addFiles} />
+            <UploadQueue tasks={tasks} onClear={() => setTasks((current) => current.filter((task) => task.status === "waiting" || task.status === "uploading"))} />
+          </>
+        )}
 
         <section className="library-section">
           <div className="library-heading">
@@ -189,23 +203,24 @@ export function DashboardPage({ onLoggedOut }: DashboardPageProps) {
             </form>
           </div>
 
-          <div className="bulk-bar">
+          {isAdmin && <div className="bulk-bar">
             <label><input type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelected(event.target.checked ? new Set(images.map((image) => image.key)) : new Set())} /> 全选当前页</label>
             <span>已选择 {selected.size} 张</span>
             <button className="button danger" type="button" disabled={selected.size === 0} onClick={() => { void remove([...selected]); }}>批量删除</button>
             <button className="button quiet" type="button" disabled={loading} onClick={() => { void Promise.all([loadImages(), loadStats()]); }}>刷新</button>
-          </div>
+          </div>}
 
           {loading ? (
             <div className="empty-state"><span className="spinner" />正在加载图片…</div>
           ) : images.length === 0 ? (
-            <div className="empty-state">{search ? "没有找到匹配的图片" : "还没有图片，从上方上传第一张吧"}</div>
+            <div className="empty-state">{search ? "没有找到匹配的图片" : isAdmin ? "还没有图片，从上方上传第一张吧" : "还没有公开图片"}</div>
           ) : (
             <div className="image-grid">
               {images.map((image) => (
                 <ImageCard
                   key={image.key}
                   image={image}
+                  manageable={isAdmin}
                   selected={selected.has(image.key)}
                   onSelect={(checked) => setSelected((current) => { const next = new Set(current); checked ? next.add(image.key) : next.delete(image.key); return next; })}
                   onDelete={() => { void remove([image.key]); }}

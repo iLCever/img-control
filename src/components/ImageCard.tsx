@@ -4,13 +4,14 @@ import { formatBytes, formatDate, shortType } from "../utils/format";
 
 interface ImageCardProps {
   image: ImageItem;
+  manageable: boolean;
   selected: boolean;
   onSelect: (selected: boolean) => void;
   onDelete: () => void;
   onCopy: (text: string, label: string) => void;
 }
 
-export function ImageCard({ image, selected, onSelect, onDelete, onCopy }: ImageCardProps) {
+export function ImageCard({ image, manageable, selected, onSelect, onDelete, onCopy }: ImageCardProps) {
   const [failed, setFailed] = useState(false);
   const copies = [
     ["URL", image.url],
@@ -27,10 +28,12 @@ export function ImageCard({ image, selected, onSelect, onDelete, onCopy }: Image
         ) : (
           <img src={image.url} alt={image.originalName} loading="lazy" onError={() => setFailed(true)} />
         )}
-        <label className="select-box" title="选择图片">
-          <input type="checkbox" checked={selected} onChange={(event) => onSelect(event.target.checked)} />
-          <span aria-hidden="true">✓</span>
-        </label>
+        {manageable && (
+          <label className="select-box" title="选择图片">
+            <input type="checkbox" checked={selected} onChange={(event) => onSelect(event.target.checked)} />
+            <span aria-hidden="true">✓</span>
+          </label>
+        )}
         <a className="preview-link" href={image.url} target="_blank" rel="noreferrer">预览</a>
       </div>
       <div className="card-body">
@@ -44,7 +47,7 @@ export function ImageCard({ image, selected, onSelect, onDelete, onCopy }: Image
             <button type="button" key={label} onClick={() => onCopy(value, label)}>复制 {label}</button>
           ))}
         </div>
-        <button className="delete-button" type="button" onClick={onDelete}>删除图片</button>
+        {manageable && <button className="delete-button" type="button" onClick={onDelete}>删除图片</button>}
       </div>
     </article>
   );

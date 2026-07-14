@@ -1,17 +1,21 @@
 import { IMAGE_KEY_PATTERN } from "./_lib/images";
-import { landingResponse } from "./_lib/landing";
 
 const IMAGE_HOST = "img.moxiao.ggff.net";
+const PUBLIC_API_PATHS = new Set(["/api/images", "/api/stats"]);
 
 export const onRequest: PagesFunction<Env> = async ({ request, next }) => {
   const url = new URL(request.url);
   if (url.hostname !== IMAGE_HOST) return next();
 
-  // 图片域名只暴露入口页、robots.txt 和合法图片路径，管理 API 仅能从后台域名访问。
-  if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
-    return landingResponse(request.method === "HEAD");
-  }
-  if (url.pathname === "/robots.txt" && request.method === "GET") return next();
+  // 图片域名公开前端静态资源、只读目录 API 和合法图片路径；所有写接口仍只允许后台域名访问。
+  if ((request.method === "GET" || request.method === "HEAD") && (
+    url.pathname === "/" ||
+    url.pathname === "/index.html" ||
+    url.pathname === "/robots.txt" ||
+    url.pathname === "/favicon.svg" ||
+    url.pathname.startsWith("/assets/")
+  )) return next();
+  if (request.method === "GET" && PUBLIC_API_PATHS.has(url.pathname)) return next();
   if ((request.method === "GET" || request.method === "HEAD") && IMAGE_KEY_PATTERN.test(url.pathname.slice(1))) {
     return next();
   }
