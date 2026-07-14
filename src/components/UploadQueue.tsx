@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { UploadTask } from "../types";
 import { formatBytes } from "../utils/format";
 
@@ -15,10 +15,40 @@ const STATUS_LABEL: Record<UploadTask["status"], string> = {
 };
 
 function ResultField({ label, value }: { label: string; value: string }) {
+  const [tip, setTip] = useState<{ id: number; text: string } | null>(null);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+  }, []);
+
+  function showTip(text: string) {
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    setTip({ id: Date.now(), text });
+    timerRef.current = window.setTimeout(() => setTip(null), 1200);
+  }
+
+  async function copyValue() {
+    try {
+      await navigator.clipboard.writeText(value);
+      showTip("已复制");
+    } catch {
+      showTip("复制失败");
+    }
+  }
+
   return (
     <label className="result-field">
       <span>{label}</span>
-      <input readOnly value={value} onFocus={(event) => event.currentTarget.select()} />
+      <span className="result-input-wrap">
+        <input
+          readOnly
+          value={value}
+          onClick={(event) => { event.currentTarget.select(); showTip("双击复制"); }}
+          onDoubleClick={() => { void copyValue(); }}
+        />
+        {tip && <small key={tip.id} className="field-copy-tip" role="status">{tip.text}</small>}
+      </span>
     </label>
   );
 }
