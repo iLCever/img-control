@@ -1,0 +1,26 @@
+{
+  "name": "moxiao-private-image-host",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:pages": "npm run build && wrangler pages dev dist",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "cf-typegen": "wrangler types --path=./worker-configuration.d.ts"
+  },
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "typescript": "7.0.2",
+    "vite": "8.1.4",
+    "wrangler": "4.110.0"
+  }
+}
