@@ -27,6 +27,7 @@ export interface ImageListData {
 export interface StatsData {
   count: number;
   totalSize: number;
+  visitorIp: string;
 }
 
 export type UploadStatus = "waiting" | "uploading" | "success" | "error";

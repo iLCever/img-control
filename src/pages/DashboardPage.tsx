@@ -17,7 +17,7 @@ const MAX_SIZE = 5 * 1024 * 1024;
 
 export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   const [images, setImages] = useState<ImageItem[]>([]);
-  const [stats, setStats] = useState<StatsData>({ count: 0, totalSize: 0 });
+  const [stats, setStats] = useState<StatsData>({ count: 0, totalSize: 0, visitorIp: "获取中…" });
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [matchedCount, setMatchedCount] = useState(0);
   const [searchInput, setSearchInput] = useState("");
@@ -158,6 +158,9 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
       <header className="topbar">
         <div className="brand"><span className="brand-mark small">图</span><div><strong>图床</strong><span>{isAdmin ? "私人图片管理" : "公开图片库"}</span></div></div>
         <div className="header-actions">
+          <p className="site-summary">
+            本站已托管 <strong>{stats.count.toLocaleString("zh-CN")}</strong> 个文件；你访问本站的 IP 是：<code>{stats.visitorIp}</code>
+          </p>
           <div className="stat-pill"><strong>{stats.count}</strong><span>张图片</span></div>
           <div className="stat-pill"><strong>{formatBytes(stats.totalSize)}</strong><span>已使用</span></div>
           <button className="button primary header-upload" type="button" disabled={uploading} onClick={() => headerInputRef.current?.click()}>上传</button>

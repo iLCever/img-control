@@ -8,8 +8,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     const images = await listAllImages(env.IMAGES_KV, env.PUBLIC_IMAGE_BASE_URL);
     const count = images.length;
     const totalSize = images.reduce((sum, image) => sum + image.size, 0);
+    const connectingIp = request.headers.get("CF-Connecting-IP") ?? "";
+    // 只接受标准 IPv4/IPv6 字符，避免把异常请求头直接反射到页面。
+    const visitorIp = connectingIp.length <= 64 && /^[0-9a-f:.]+$/iu.test(connectingIp)
+      ? connectingIp
+      : "未知";
 
-    return jsonSuccess({ count, totalSize });
+    return jsonSuccess({ count, totalSize, visitorIp });
   } catch (error) {
     logError(request, error);
     return jsonError("STATS_FAILED", "存储统计加载失败", 500);
