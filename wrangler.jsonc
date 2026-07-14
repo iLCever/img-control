@@ -8,19 +8,11 @@
     // 非敏感配置；预览环境可在 Cloudflare 控制台中覆盖。
     "PUBLIC_IMAGE_BASE_URL": "https://img.moxiao.ggff.net"
   },
-  // 只声明 Secret 名称；真实值通过控制台或 .dev.vars 提供。
-  "secrets": {
-    "required": ["ADMIN_PASSWORD", "SESSION_SECRET"]
-  },
   "kv_namespaces": [
     {
       "binding": "IMAGES_KV",
       // 部署前替换为你创建的 Workers KV Namespace ID。
       "id": "3fb926d66dec4ac988286273ceab1a09"
     }
-  ],
-  "observability": {
-    "enabled": true,
-    "logs": { "head_sampling_rate": 1 }
-  }
+  ]
 }
