@@ -27,9 +27,6 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   const [tasks, setTasks] = useState<UploadTask[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
-  const [theme, setTheme] = useState<"light" | "dark">(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
-  );
   const headerInputRef = useRef<HTMLInputElement>(null);
 
   const uploading = tasks.some((task) => task.status === "uploading" || task.status === "waiting");
@@ -60,10 +57,6 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   }, [handleAuthError, search]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
-
-  useEffect(() => {
     void Promise.all([loadImages(), loadStats()]);
   }, [loadImages, loadStats]);
 
@@ -79,7 +72,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
       let error: string | undefined;
       if (!ALLOWED_TYPES.has(file.type)) error = "不支持此图片格式";
       else if (file.size > MAX_SIZE) error = "图片超过 5 MB";
-      return { id: crypto.randomUUID(), file, status: error ? "error" : "waiting", error };
+      return { id: crypto.randomUUID(), file, status: error ? "error" : "waiting", progress: 0, error };
     });
     setTasks((current) => [...created, ...current]);
 
@@ -93,8 +86,10 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
           if (!task) continue;
           setTasks((current) => current.map((item) => item.id === task.id ? { ...item, status: "uploading" } : item));
           try {
-            const result = await api.upload(task.file);
-            setTasks((current) => current.map((item) => item.id === task.id ? { ...item, status: "success", result } : item));
+            const result = await api.upload(task.file, (progress) => {
+              setTasks((current) => current.map((item) => item.id === task.id ? { ...item, progress } : item));
+            });
+            setTasks((current) => current.map((item) => item.id === task.id ? { ...item, status: "success", progress: 100, result } : item));
           } catch (error) {
             handleAuthError(error);
             setTasks((current) => current.map((item) => item.id === task.id ? {
@@ -169,9 +164,6 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
             multiple
             onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }}
           />
-          <button className="icon-button" type="button" onClick={() => setTheme(theme === "light" ? "dark" : "light")} title="切换主题">
-            {theme === "light" ? "☾" : "☀"}
-          </button>
           {isAdmin ? (
             <button className="button quiet" type="button" onClick={() => { void logout(); }}>退出</button>
           ) : (
@@ -182,7 +174,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
 
       <main className="dashboard">
         <UploadZone disabled={uploading} onFiles={addFiles} />
-        <UploadQueue tasks={tasks} onClear={() => setTasks((current) => current.filter((task) => task.status === "waiting" || task.status === "uploading"))} />
+        <UploadQueue tasks={tasks} onClear={() => setTasks([])} />
 
         <section className="library-section">
           <div className="library-heading">

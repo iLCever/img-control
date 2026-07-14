@@ -35,6 +35,7 @@ export interface UploadTask {
   id: string;
   file: File;
   status: UploadStatus;
+  progress: number;
   result?: ImageItem;
   error?: string;
 }

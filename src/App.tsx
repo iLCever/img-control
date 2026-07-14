@@ -9,7 +9,8 @@ const PUBLIC_IMAGE_HOST = "img.moxiao.ggff.net";
 
 export default function App() {
   const [auth, setAuth] = useState<AuthState>("loading");
-  const isPublicSite = window.location.hostname === PUBLIC_IMAGE_HOST;
+  const isPublicSite = window.location.hostname === PUBLIC_IMAGE_HOST
+    || (import.meta.env.DEV && new URLSearchParams(window.location.search).get("view") === "public");
 
   useEffect(() => {
     // 公开图片域名不需要请求 Session；鉴权只用于独立管理域名。
