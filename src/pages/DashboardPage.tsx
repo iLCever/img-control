@@ -114,7 +114,6 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   }, [handleAuthError, loadImages, loadStats]);
 
   useEffect(() => {
-    if (!isAdmin) return;
     const paste = (event: ClipboardEvent) => {
       const files = Array.from(event.clipboardData?.items ?? [])
         .filter((item) => item.kind === "file")
@@ -124,7 +123,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
     };
     window.addEventListener("paste", paste);
     return () => window.removeEventListener("paste", paste);
-  }, [addFiles, isAdmin]);
+  }, [addFiles]);
 
   async function copy(text: string, label: string) {
     try {
@@ -161,19 +160,15 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
         <div className="header-actions">
           <div className="stat-pill"><strong>{stats.count}</strong><span>张图片</span></div>
           <div className="stat-pill"><strong>{formatBytes(stats.totalSize)}</strong><span>已使用</span></div>
-          {isAdmin && (
-            <>
-              <button className="button primary header-upload" type="button" disabled={uploading} onClick={() => headerInputRef.current?.click()}>上传</button>
-              <input
-                ref={headerInputRef}
-                className="visually-hidden"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                multiple
-                onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }}
-              />
-            </>
-          )}
+          <button className="button primary header-upload" type="button" disabled={uploading} onClick={() => headerInputRef.current?.click()}>上传</button>
+          <input
+            ref={headerInputRef}
+            className="visually-hidden"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            multiple
+            onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }}
+          />
           <button className="icon-button" type="button" onClick={() => setTheme(theme === "light" ? "dark" : "light")} title="切换主题">
             {theme === "light" ? "☾" : "☀"}
           </button>
@@ -186,12 +181,8 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
       </header>
 
       <main className="dashboard">
-        {isAdmin && (
-          <>
-            <UploadZone disabled={uploading} onFiles={addFiles} />
-            <UploadQueue tasks={tasks} onClear={() => setTasks((current) => current.filter((task) => task.status === "waiting" || task.status === "uploading"))} />
-          </>
-        )}
+        <UploadZone disabled={uploading} onFiles={addFiles} />
+        <UploadQueue tasks={tasks} onClear={() => setTasks((current) => current.filter((task) => task.status === "waiting" || task.status === "uploading"))} />
 
         <section className="library-section">
           <div className="library-heading">
@@ -213,7 +204,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
           {loading ? (
             <div className="empty-state"><span className="spinner" />正在加载图片…</div>
           ) : images.length === 0 ? (
-            <div className="empty-state">{search ? "没有找到匹配的图片" : isAdmin ? "还没有图片，从上方上传第一张吧" : "还没有公开图片"}</div>
+            <div className="empty-state">{search ? "没有找到匹配的图片" : "还没有图片，从上方上传第一张吧"}</div>
           ) : (
             <div className="image-grid">
               {images.map((image) => (

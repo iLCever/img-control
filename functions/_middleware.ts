@@ -16,6 +16,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, next }) => {
     url.pathname.startsWith("/assets/")
   )) return next();
   if (request.method === "GET" && PUBLIC_API_PATHS.has(url.pathname)) return next();
+  if (request.method === "POST" && url.pathname === "/api/upload") return next();
   if ((request.method === "GET" || request.method === "HEAD") && IMAGE_KEY_PATTERN.test(url.pathname.slice(1))) {
     return next();
   }

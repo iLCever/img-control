@@ -2,10 +2,15 @@ import { requireSession } from "../_lib/auth";
 import { buildImageKey, publicImageUrl, safeOriginalName, validateImage, type ImageMetadata } from "../_lib/images";
 import { isSameOrigin, jsonError, jsonSuccess, logError } from "../_lib/http";
 
+const PUBLIC_UPLOAD_HOST = "img.moxiao.ggff.net";
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
-    const unauthorized = await requireSession(request, env);
-    if (unauthorized) return unauthorized;
+    // 公开图片域名允许匿名上传；管理域名调用上传接口时仍要求管理员 Session。
+    if (new URL(request.url).hostname !== PUBLIC_UPLOAD_HOST) {
+      const unauthorized = await requireSession(request, env);
+      if (unauthorized) return unauthorized;
+    }
     if (!isSameOrigin(request)) return jsonError("INVALID_ORIGIN", "请求来源无效", 403);
     if (!env.PUBLIC_IMAGE_BASE_URL) return jsonError("SERVER_MISCONFIGURED", "图片访问域名尚未配置", 500);
 
