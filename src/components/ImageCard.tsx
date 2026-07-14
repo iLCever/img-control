@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ImageLightbox } from "./ImageLightbox";
 import type { ImageItem } from "../types";
 import { formatBytes, formatDate, shortType } from "../utils/format";
 
@@ -13,6 +14,7 @@ interface ImageCardProps {
 
 export function ImageCard({ image, manageable, selected, onSelect, onDelete, onCopy }: ImageCardProps) {
   const [failed, setFailed] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const copies = [
     ["URL", image.url],
     ["Markdown", `![](${image.url})`],
@@ -28,13 +30,15 @@ export function ImageCard({ image, manageable, selected, onSelect, onDelete, onC
         ) : (
           <img src={image.url} alt={image.originalName} loading="lazy" onError={() => setFailed(true)} />
         )}
+        {!failed && (
+          <button className="thumbnail-preview-button" type="button" aria-label={`预览 ${image.originalName}`} onClick={() => setPreviewing(true)} />
+        )}
         {manageable && (
           <label className="select-box" title="选择图片">
             <input type="checkbox" checked={selected} onChange={(event) => onSelect(event.target.checked)} />
             <span aria-hidden="true">✓</span>
           </label>
         )}
-        <a className="preview-link" href={image.url} target="_blank" rel="noreferrer">预览</a>
       </div>
       <div className="card-body">
         <strong className="file-name" title={image.originalName}>{image.originalName}</strong>
@@ -49,6 +53,7 @@ export function ImageCard({ image, manageable, selected, onSelect, onDelete, onC
         </div>
         {manageable && <button className="delete-button" type="button" onClick={onDelete}>删除图片</button>}
       </div>
+      <ImageLightbox src={image.url} alt={image.originalName} open={previewing} onClose={() => setPreviewing(false)} />
     </article>
   );
 }

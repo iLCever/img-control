@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ImageLightbox } from "./ImageLightbox";
 import type { UploadTask } from "../types";
 import { formatBytes } from "../utils/format";
 
@@ -55,6 +56,7 @@ function ResultField({ label, value }: { label: string; value: string }) {
 
 function UploadResultCard({ task }: { task: UploadTask }) {
   const [previewUrl, setPreviewUrl] = useState("");
+  const [previewing, setPreviewing] = useState(false);
   const progress = Math.max(0, Math.min(100, task.progress));
 
   useEffect(() => {
@@ -66,10 +68,16 @@ function UploadResultCard({ task }: { task: UploadTask }) {
   return (
     <article className={`upload-result-card ${task.status}`}>
       <div className="upload-result-preview">
-        {previewUrl && <img src={previewUrl} alt={task.file.name} />}
-        {task.status === "success" && <span className="upload-success-mark" aria-label="上传成功">✓</span>}
+        <div className="upload-preview-media">
+          {previewUrl && <img src={previewUrl} alt={task.file.name} />}
+          {previewUrl && (
+            <button className="thumbnail-preview-button" type="button" aria-label={`预览 ${task.file.name}`} onClick={() => setPreviewing(true)} />
+          )}
+          {task.status === "success" && <span className="upload-success-mark" aria-label="上传成功">✓</span>}
+        </div>
         <strong title={task.file.name}>{task.file.name}</strong>
         <small>{formatBytes(task.file.size)}</small>
+        {previewUrl && <ImageLightbox src={previewUrl} alt={task.file.name} open={previewing} onClose={() => setPreviewing(false)} />}
       </div>
 
       <div className="upload-result-detail">
