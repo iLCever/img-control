@@ -143,7 +143,12 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   }
 
   async function logout() {
-    try { await api.logout(); } finally { onLoggedOut?.(); }
+    try {
+      await api.logout();
+    } finally {
+      // 主动退出后返回公开图床，并替换历史记录，避免后退回到管理页面。
+      window.location.replace("https://img.moxiao.ggff.net/");
+    }
   }
 
   const allVisibleSelected = useMemo(() => images.length > 0 && images.every((image) => selected.has(image.key)), [images, selected]);
