@@ -1,9 +1,9 @@
 # 图床（Workers KV 免费版）
 
-面向单用户、低访问量场景的私人图床。前端使用 React、TypeScript 与 Vite，API 使用 Cloudflare Pages Functions，图片保存在 Workers KV；不需要传统服务器、R2、D1，也不需要开通 Workers Paid 或 R2 订阅。
+面向低访问量场景的轻量公开图床：访客可以直接上传、浏览和复制图片链接，管理员通过独立域名登录后管理与删除图片。前端使用 React、TypeScript 与 Vite，API 使用 Cloudflare Pages Functions，图片保存在 Workers KV；不需要传统服务器、R2 或 D1。
 
-- 管理后台：`https://img-admin.moxiao.ggff.net`
-- 公开图片库：`https://img.moxiao.ggff.net`
+- 公开图床：<https://img.moxiao.ggff.net>
+- 管理后台：<https://img-admin.moxiao.ggff.net>
 - KV Binding：`IMAGES_KV`
 - Secret：`ADMIN_PASSWORD`、`SESSION_SECRET`
 - 普通变量：`PUBLIC_IMAGE_BASE_URL=https://img.moxiao.ggff.net`
@@ -12,18 +12,23 @@
 
 Workers Free 默认包含 Workers KV。当前免费限制为：总存储 1 GB、每天 100,000 次读取、1,000 次写入、1,000 次删除、1,000 次列表操作；KV 单值上限 25 MiB。本项目主动把单张图片限制为 **5 MB**。
 
-KV 是最终一致存储。上传或删除在当前访问位置通常立即可见，但其他地区最多可能约 60 秒后才看到变化。这个方案适合私人低流量图床，不适合大量图片或高并发公开图床。
+KV 是最终一致存储。上传或删除在当前访问位置通常立即可见，但其他地区最多可能约 60 秒后才看到变化。这个方案适合低流量图床，不适合大量图片或高并发场景。
+
+> [!IMPORTANT]
+> 公开域名允许匿名上传，任何访客都可能消耗 KV 存储和每日写入额度。用于长期公开服务时，建议继续增加 Turnstile、上传频率限制或其他反滥用措施。
 
 ## 功能
 
-- 单管理员密码登录，HMAC 签名的 7 天 HttpOnly Session Cookie
-- 点击、拖拽、剪贴板粘贴和多图并发上传
-- JPEG、PNG、WebP、GIF、AVIF 三重类型校验，单张最大 5 MB，拒绝 SVG
-- KV 图片网格、上传时间倒序、分页、文件名/Key 搜索、存储统计
-- 单张删除、批量删除、刷新、失败占位图
-- 复制 URL、Markdown、HTML 和 BBCode
-- 桌面 4–6 列、手机 2 列、浅色/深色主题
-- `img` 根路径允许访客上传并公开展示图片网格，右上角登录按钮跳转到独立管理域名
+- 公开上传：点击选择、拖拽、剪贴板粘贴和最多 3 个并发上传请求
+- 上传结果：本地缩略图、真实上传百分比、进度条、成功/失败状态和清空记录
+- 图片校验：JPEG、PNG、WebP、GIF、AVIF 的扩展名、Content-Type 与文件头三重校验；单张最大 5 MB，拒绝 SVG
+- 链接输出：URL、Markdown、HTML、BBCode；单击文本框全选，双击复制并显示上浮提示
+- 公开图库：上传时间倒序、分页、文件名/Key 搜索、存储数量与容量统计、失败占位图
+- 网页内预览：悬停变暗，支持上下/左右翻转、左右旋转 90°、25%–300% 缩放及 `Esc` 关闭
+- 管理后台：单管理员密码、HMAC 签名的 7 天 HttpOnly Session Cookie、单删、批量删除和刷新
+- 域名分流：公开站右上角登录跳转到管理域名；管理员退出后返回公开站
+- 顶部信息：显示已托管文件数量和当前访客 IP（来自 Cloudflare `CF-Connecting-IP`）
+- 响应式白色界面：桌面 4–6 列、手机 2 列，上传结果和预览工具栏自适应
 
 ## 安装与本地开发
 
@@ -148,9 +153,10 @@ npm run build
 4. 分别测试点击、拖拽、粘贴和多图上传。
 5. 测试超过 5 MB、SVG、伪造扩展名和伪造 Content-Type 的文件，均应失败。
 6. 确认图片 URL 使用 `https://img.moxiao.ggff.net/YYYY/MM/UUID.扩展名`。
-7. 测试搜索、分页、四种复制格式、单删和批量删除。
+7. 测试搜索、分页、四种链接格式、单击全选、双击复制、单删和批量删除。
 8. 退出后公开域名的 `/api/upload`、`/api/images` 和 `/api/stats` 仍可访问，管理域名的删除接口应返回 401。
-9. 手机端确认网格为两列。
+9. 测试网页内预览、上下/左右翻转、左右旋转、缩小、放大和 `Esc` 关闭。
+10. 确认顶部显示托管文件数与当前访客 IP，手机端网格为两列且顶部信息正常换行。
 
 ## API
 
@@ -178,7 +184,7 @@ npm run build
 | GET | `/api/images?cursor=&limit=30&search=` | 公开列表、搜索与分页 |
 | POST | `/api/upload` | 公开上传；multipart 字段 `file`，每个请求一张 |
 | DELETE | `/api/images` | JSON：`{ "keys": ["..."] }`，最多 100 个 |
-| GET | `/api/stats` | 公开统计，遍历 KV 元数据计算数量和大小 |
+| GET | `/api/stats` | 公开统计，返回文件数量、总大小和当前访客 IP |
 | GET/HEAD | `/YYYY/MM/UUID.扩展名` | 从 KV 返回公开图片 |
 
 ## 安全与实现说明
@@ -189,6 +195,7 @@ npm run build
 - 上传同时检查扩展名、Content-Type 和文件头，服务端生成 `YYYY/MM/UUID.扩展名` Key。
 - 图片二进制保存为 KV value，大小、类型、原始文件名和上传时间保存在 KV metadata。
 - 图片域名中间件允许前端静态资源、公开上传、只读目录 API 和合法图片路径，禁止登录及删除 API。
+- 访客 IP 由 Pages Function 读取 `CF-Connecting-IP`，只在当前请求的 `no-store` 响应中返回。
 - 登录失败限流使用 Cache API 按 IP 做轻量近似限制。
 - 列表和统计会扫描 KV Key metadata；适合低量私人场景。
 - UUID 图片 URL 使用长期 immutable 缓存；删除后旧的边缘缓存可能短时间继续可见。
