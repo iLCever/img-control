@@ -156,7 +156,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark small">墨</span><div><strong>墨小图床</strong><span>{isAdmin ? "私人图片管理" : "公开图片库"}</span></div></div>
+        <div className="brand"><span className="brand-mark small">图</span><div><strong>图床</strong><span>{isAdmin ? "私人图片管理" : "公开图片库"}</span></div></div>
         <div className="header-actions">
           <div className="stat-pill"><strong>{stats.count}</strong><span>张图片</span></div>
           <div className="stat-pill"><strong>{formatBytes(stats.totalSize)}</strong><span>已使用</span></div>

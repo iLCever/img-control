@@ -28,8 +28,8 @@ export function LoginPage({ onLoggedIn }: LoginPageProps) {
   return (
     <main className="login-shell">
       <section className="login-card">
-        <div className="brand-mark" aria-hidden="true">墨</div>
-        <h1>墨小图床</h1>
+        <div className="brand-mark" aria-hidden="true">图</div>
+        <h1>图床</h1>
         <p>私人图片管理后台</p>
         <form onSubmit={(event) => { void submit(event); }}>
           <label htmlFor="password">管理员密码</label>

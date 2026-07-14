@@ -1,4 +1,4 @@
-# 墨小图床（Workers KV 免费版）
+# 图床（Workers KV 免费版）
 
 面向单用户、低访问量场景的私人图床。前端使用 React、TypeScript 与 Vite，API 使用 Cloudflare Pages Functions，图片保存在 Workers KV；不需要传统服务器、R2、D1，也不需要开通 Workers Paid 或 R2 订阅。
 
