@@ -43,15 +43,19 @@ export function ImageLightbox({ src, alt, open, onClose }: ImageLightboxProps) {
     <div className="image-lightbox" role="dialog" aria-modal="true" aria-label={`预览 ${alt}`} onMouseDown={onClose}>
       <button ref={closeButtonRef} className="lightbox-close" type="button" aria-label="关闭预览" onClick={onClose}>×</button>
       <figure className={`lightbox-content${isQuarterTurn ? " quarter-turn" : ""}`} onMouseDown={(event) => event.stopPropagation()}>
-        <img src={src} alt={alt} style={{ transform: imageTransform }} />
-        <figcaption>{alt}</figcaption>
-        <div className="lightbox-toolbar" role="toolbar" aria-label="图片预览工具">
-          <button type="button" title="上下翻转" aria-label="上下翻转" onClick={() => setFlipY((value) => value * -1)}>↕</button>
-          <button type="button" title="左右翻转" aria-label="左右翻转" onClick={() => setFlipX((value) => value * -1)}>↔</button>
-          <button type="button" title="向左旋转 90 度" aria-label="向左旋转 90 度" onClick={() => setRotation((value) => value - 90)}>↶</button>
-          <button type="button" title="向右旋转 90 度" aria-label="向右旋转 90 度" onClick={() => setRotation((value) => value + 90)}>↷</button>
-          <button type="button" title="缩小" aria-label="缩小" disabled={scale <= 0.25} onClick={() => setScale((value) => Math.max(0.25, value - 0.25))}>−</button>
-          <button type="button" title="放大" aria-label="放大" disabled={scale >= 3} onClick={() => setScale((value) => Math.min(3, value + 0.25))}>+</button>
+        <div className="lightbox-stage">
+          <img src={src} alt={alt} style={{ transform: imageTransform }} />
+        </div>
+        <div className="lightbox-controls">
+          <figcaption title={alt}>{alt}</figcaption>
+          <div className="lightbox-toolbar" role="toolbar" aria-label="图片预览工具">
+            <button type="button" title="上下翻转" aria-label="上下翻转" onClick={() => setFlipY((value) => value * -1)}>↕</button>
+            <button type="button" title="左右翻转" aria-label="左右翻转" onClick={() => setFlipX((value) => value * -1)}>↔</button>
+            <button type="button" title="向左旋转 90 度" aria-label="向左旋转 90 度" onClick={() => setRotation((value) => value - 90)}>↶</button>
+            <button type="button" title="向右旋转 90 度" aria-label="向右旋转 90 度" onClick={() => setRotation((value) => value + 90)}>↷</button>
+            <button type="button" title="缩小" aria-label="缩小" disabled={scale <= 0.25} onClick={() => setScale((value) => Math.max(0.25, value - 0.25))}>−</button>
+            <button type="button" title="放大" aria-label="放大" disabled={scale >= 3} onClick={() => setScale((value) => Math.min(3, value + 0.25))}>+</button>
+          </div>
         </div>
       </figure>
     </div>,
