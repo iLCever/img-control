@@ -48,13 +48,15 @@ export async function validateImage(file: File): Promise<{ type: ImageType; byte
   const originalExtension = file.name.split(".").pop()?.toLowerCase() ?? "";
   const extensionType = EXTENSION_TYPES[originalExtension];
   if (!extensionType) return { error: "仅允许 JPEG、PNG、WebP、GIF 和 AVIF 图片" };
-  if (file.type !== extensionType.contentType) return { error: "文件扩展名与 Content-Type 不一致" };
+  const contentTypeAllowed = Object.values(EXTENSION_TYPES).some((type) => type.contentType === file.type);
+  if (!contentTypeAllowed) return { error: "图片 Content-Type 不受支持" };
 
   const bytes = await file.arrayBuffer();
   const detected = sniffImageType(new Uint8Array(bytes.slice(0, 64)));
-  if (!detected || detected.contentType !== extensionType.contentType) {
-    return { error: "文件头校验失败，文件可能不是有效图片" };
-  }
+  if (!detected) return { error: "文件头校验失败，文件可能不是有效图片" };
+
+  // 某些看图或导出软件只修改文件后缀，二进制内容仍是另一种允许的图片格式。
+  // 文件头比扩展名和浏览器提供的 Content-Type 更可靠，因此按检测结果生成 Key 和响应类型。
   return { type: detected, bytes };
 }
 
