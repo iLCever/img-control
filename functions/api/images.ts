@@ -14,7 +14,9 @@ function parseDeleteBody(value: unknown): DeleteBody | null {
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
-    // 图片目录公开只读；上传与删除仍在各自写接口中强制验证 Session。
+    // 图片直链保持公开，但目录会暴露所有文件名和访问地址，只允许管理员查询。
+    const unauthorized = await requireSession(request, env);
+    if (unauthorized) return unauthorized;
     if (!env.PUBLIC_IMAGE_BASE_URL) return jsonError("SERVER_MISCONFIGURED", "图片访问域名尚未配置", 500);
 
     const url = new URL(request.url);

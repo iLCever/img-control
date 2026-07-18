@@ -1,13 +1,13 @@
 import { IMAGE_KEY_PATTERN } from "./_lib/images";
 
 const IMAGE_HOST = "img.moxiao.ggff.net";
-const PUBLIC_API_PATHS = new Set(["/api/images", "/api/stats"]);
+const REACHABLE_GET_API_PATHS = new Set(["/api/images", "/api/stats"]);
 
 export const onRequest: PagesFunction<Env> = async ({ request, next }) => {
   const url = new URL(request.url);
   if (url.hostname !== IMAGE_HOST) return next();
 
-  // 图片域名公开前端静态资源、只读目录 API 和合法图片路径；所有写接口仍只允许后台域名访问。
+  // 图片域名允许列表请求进入 API 层并返回标准 401；统计、静态资源、上传和图片直链保持公开。
   if ((request.method === "GET" || request.method === "HEAD") && (
     url.pathname === "/" ||
     url.pathname === "/index.html" ||
@@ -15,7 +15,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, next }) => {
     url.pathname === "/favicon.svg" ||
     url.pathname.startsWith("/assets/")
   )) return next();
-  if (request.method === "GET" && PUBLIC_API_PATHS.has(url.pathname)) return next();
+  if (request.method === "GET" && REACHABLE_GET_API_PATHS.has(url.pathname)) return next();
   if (request.method === "POST" && url.pathname === "/api/upload") return next();
   if ((request.method === "GET" || request.method === "HEAD") && IMAGE_KEY_PATTERN.test(url.pathname.slice(1))) {
     return next();

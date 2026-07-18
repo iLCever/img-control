@@ -57,8 +57,9 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   }, [handleAuthError, search]);
 
   useEffect(() => {
-    void Promise.all([loadImages(), loadStats()]);
-  }, [loadImages, loadStats]);
+    void loadStats();
+    if (isAdmin) void loadImages();
+  }, [isAdmin, loadImages, loadStats]);
 
   useEffect(() => {
     if (!toast) return;
@@ -102,11 +103,12 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
       }
       await Promise.all(Array.from({ length: Math.min(3, valid.length) }, () => worker()));
       if (valid.length > 0) {
-        await Promise.all([loadImages(), loadStats()]);
+        if (isAdmin) await Promise.all([loadImages(), loadStats()]);
+        else await loadStats();
         setToast("上传队列处理完成");
       }
     })();
-  }, [handleAuthError, loadImages, loadStats]);
+  }, [handleAuthError, isAdmin, loadImages, loadStats]);
 
   useEffect(() => {
     const paste = (event: ClipboardEvent) => {
@@ -156,7 +158,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark small">图</span><div><strong>图床</strong><span>{isAdmin ? "私人图片管理" : "公开图片库"}</span></div></div>
+        <div className="brand"><span className="brand-mark small">图</span><div><strong>图床</strong><span>{isAdmin ? "私人图片管理" : "公开图片上传"}</span></div></div>
         <div className="header-actions">
           <p className="site-summary">
             本站已托管 <strong>{stats.count.toLocaleString("zh-CN")}</strong> 个文件；你访问本站的 IP 是：<code>{stats.visitorIp}</code>
@@ -184,7 +186,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
         <UploadZone disabled={uploading} onFiles={addFiles} />
         <UploadQueue tasks={tasks} onClear={() => setTasks([])} />
 
-        <section className="library-section">
+        {isAdmin && <section className="library-section">
           <div className="library-heading">
             <div><h2>图片库</h2><p>{search ? `找到 ${matchedCount} 张匹配图片` : `共 ${stats.count} 张图片`}</p></div>
             <form className="search-form" onSubmit={(event) => { event.preventDefault(); setSearch(searchInput.trim()); }}>
@@ -194,12 +196,12 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
             </form>
           </div>
 
-          {isAdmin && <div className="bulk-bar">
+          <div className="bulk-bar">
             <label><input type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelected(event.target.checked ? new Set(images.map((image) => image.key)) : new Set())} /> 全选当前页</label>
             <span>已选择 {selected.size} 张</span>
             <button className="button danger" type="button" disabled={selected.size === 0} onClick={() => { void remove([...selected]); }}>批量删除</button>
             <button className="button quiet" type="button" disabled={loading} onClick={() => { void Promise.all([loadImages(), loadStats()]); }}>刷新</button>
-          </div>}
+          </div>
 
           {loading ? (
             <div className="empty-state"><span className="spinner" />正在加载图片…</div>
@@ -221,7 +223,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
             </div>
           )}
           {nextCursor && <button className="button load-more" type="button" disabled={loadingMore} onClick={() => { void loadImages(true, nextCursor); }}>{loadingMore ? "加载中…" : "加载更多"}</button>}
-        </section>
+        </section>}
       </main>
       {toast && <Toast message={toast} />}
     </div>
