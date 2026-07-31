@@ -2,7 +2,7 @@ import { requireSession } from "../_lib/auth";
 import { buildImageKey, publicImageUrl, safeOriginalName, validateImage, type ImageMetadata } from "../_lib/images";
 import { isSameOrigin, jsonError, jsonSuccess, logError } from "../_lib/http";
 
-const PUBLIC_UPLOAD_HOST = "img.moxiao.ggff.net";
+const PUBLIC_UPLOAD_HOST = "img.moxiao.de5.net";
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {

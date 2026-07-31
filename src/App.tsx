@@ -5,7 +5,7 @@ import { api } from "./services/api";
 
 type AuthState = "loading" | "authenticated" | "anonymous";
 
-const PUBLIC_IMAGE_HOST = "img.moxiao.ggff.net";
+const PUBLIC_IMAGE_HOST = "img.moxiao.de5.net";
 
 export default function App() {
   const [auth, setAuth] = useState<AuthState>("loading");

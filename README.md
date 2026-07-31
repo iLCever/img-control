@@ -2,11 +2,11 @@
 
 面向低访问量场景的轻量公开图床：访客可以直接上传并获取本次上传的图片链接；完整图片库仅对登录管理员开放，管理员通过独立域名登录后浏览、管理与删除图片。前端使用 React、TypeScript 与 Vite，API 使用 Cloudflare Pages Functions，图片保存在 Workers KV；不需要传统服务器、R2 或 D1。
 
-- 公开图床：<https://img.moxiao.ggff.net>
+- 公开图床：<https://img.moxiao.de5.net>
 - 管理后台：<https://img-admin.moxiao.ggff.net>
 - KV Binding：`IMAGES_KV`
 - Secret：`ADMIN_PASSWORD`、`SESSION_SECRET`
-- 普通变量：`PUBLIC_IMAGE_BASE_URL=https://img.moxiao.ggff.net`
+- 普通变量：`PUBLIC_IMAGE_BASE_URL=https://img.moxiao.de5.net`
 
 ## 免费方案限制
 
@@ -53,7 +53,7 @@ npm run build        # 生产构建
 ```dotenv
 ADMIN_PASSWORD=<YOUR_LOCAL_ADMIN_PASSWORD>
 SESSION_SECRET=<YOUR_RANDOM_SESSION_SECRET_AT_LEAST_32_BYTES>
-PUBLIC_IMAGE_BASE_URL=https://img.moxiao.ggff.net
+PUBLIC_IMAGE_BASE_URL=https://img.moxiao.de5.net
 ```
 
 Wrangler 默认使用本地 KV 模拟数据，不会改动线上 Namespace。
@@ -134,25 +134,25 @@ npm run build
 在 Pages 项目 **Custom domains → Set up a domain** 中分别添加：
 
 1. `img-admin.moxiao.ggff.net`
-2. `img.moxiao.ggff.net`
+2. `img.moxiao.de5.net`
 
 必须通过 Pages 的 Custom domains 流程添加，不能只手动创建 DNS CNAME。等待两个域名的 TLS 状态都变为 Active。
 
 同一个 Pages 项目会按 Host 分流：
 
 - `img-admin.moxiao.ggff.net` 提供登录和完整管理后台。
-- `img.moxiao.ggff.net/` 无需登录即可上传、浏览、搜索、预览和复制图片链接。
-- `img.moxiao.ggff.net/YYYY/MM/UUID.扩展名` 从 KV 返回图片。
+- `img.moxiao.de5.net/` 无需登录即可上传并获取本次上传的图片链接；历史图片库仅管理员可见。
+- `img.moxiao.de5.net/YYYY/MM/UUID.扩展名` 从 KV 返回图片。
 - 图片域名开放上传、列表与统计 API；登录和删除等管理 API会返回 404。
 
 ## 部署后测试
 
-1. 打开 `https://img.moxiao.ggff.net/`，确认无需登录即可上传并显示公开图片网格。
+1. 打开 `https://img.moxiao.de5.net/`，确认无需登录即可上传，但不显示历史图片库。
 2. 点击右上角“登录”，确认跳转到 `https://img-admin.moxiao.ggff.net/login`。
 3. 使用错误密码测试拒绝和登录限流，再使用管理员密码登录。
 4. 分别测试点击、拖拽、粘贴和多图上传。
 5. 测试超过 5 MB、SVG、伪造扩展名和伪造 Content-Type 的文件，均应失败。
-6. 确认图片 URL 使用 `https://img.moxiao.ggff.net/YYYY/MM/UUID.扩展名`。
+6. 确认图片 URL 使用 `https://img.moxiao.de5.net/YYYY/MM/UUID.扩展名`。
 7. 测试搜索、分页、四种链接格式、单击全选、双击复制、单删和批量删除。
 8. 退出后公开域名的 `/api/upload`、`/api/images` 和 `/api/stats` 仍可访问，管理域名的删除接口应返回 401。
 9. 测试网页内预览、上下/左右翻转、左右旋转、缩小、放大和 `Esc` 关闭。
@@ -230,5 +230,5 @@ npx wrangler kv key get --binding=IMAGES_KV "2026/07/UUID.jpg" --remote --file="
 - [ ] 加密设置 `ADMIN_PASSWORD` 和 `SESSION_SECRET`
 - [ ] 核验 `IMAGES_KV` Binding 指向正确 Namespace
 - [ ] 给同一个 Pages 项目添加 `img-admin.moxiao.ggff.net`
-- [ ] 给同一个 Pages 项目添加 `img.moxiao.ggff.net`
+- [ ] 给同一个 Pages 项目添加 `img.moxiao.de5.net`
 - [ ] 重新部署并完成测试

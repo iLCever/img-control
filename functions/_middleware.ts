@@ -1,6 +1,6 @@
 import { IMAGE_KEY_PATTERN } from "./_lib/images";
 
-const IMAGE_HOST = "img.moxiao.ggff.net";
+const IMAGE_HOST = "img.moxiao.de5.net";
 const REACHABLE_GET_API_PATHS = new Set(["/api/images", "/api/stats"]);
 
 export const onRequest: PagesFunction<Env> = async ({ request, next }) => {
