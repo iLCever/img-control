@@ -177,7 +177,7 @@ export function DashboardPage({ isAdmin, onLoggedOut }: DashboardPageProps) {
           {isAdmin ? (
             <button className="button quiet" type="button" onClick={() => { void logout(); }}>退出</button>
           ) : (
-            <a className="button quiet" href="https://img-admin.moxiao.ggff.net/login">登录</a>
+            <a className="button quiet" href="https://img-admin.moxiao.de5.net/login">登录</a>
           )}
         </div>
       </header>
